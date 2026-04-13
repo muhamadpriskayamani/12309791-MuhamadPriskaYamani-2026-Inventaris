@@ -19,4 +19,10 @@ class Lending extends Model
     {
         return $this->hasMany(LendingItem::class);
     }
+
+    public function lendingItems()
+    {
+        return $this->hasMany(LendingItem::class);
+    }
+    
 }

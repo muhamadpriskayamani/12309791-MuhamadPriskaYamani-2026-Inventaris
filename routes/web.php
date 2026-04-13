@@ -6,6 +6,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\LendingController;
+// use App\Http\Controllers\Operator\LendingController;
 
 
 Route::get('/', function () {

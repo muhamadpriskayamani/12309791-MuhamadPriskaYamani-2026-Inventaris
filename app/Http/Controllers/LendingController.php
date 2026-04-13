@@ -99,19 +99,27 @@ class LendingController extends Controller
 
     public function returned(Lending $lending)
     {
-        if ($lending->status !== 'Returned') {
-            foreach ($lending->items as $lendingItem) {
+        foreach ($lending->lendingItems as $lendingItem) {
+
+            if ($lendingItem->status !== 'Returned') {
+
+                // Update status item
+                $lendingItem->update([
+                    'status' => 'Returned'
+                ]);
+
+                // Kurangi jumlah lending
                 $lendingItem->item->decrement('lending', $lendingItem->total);
             }
         }
 
         $lending->update([
             'status' => 'Returned',
-            'return_date' => Carbon::now()->toDateString(),
-            'edited_by' => Auth::user()->name,
+            'return_date' => now(),
+            'edited_by' => auth()->user()->name
         ]);
 
-        return redirect()->back()->with('success', 'Item berhasil dikembalikan!');
+        return back()->with('success', 'All items returned successfully!');
     }
 
     // public function destroy(Lending $lending)
@@ -138,5 +146,37 @@ class LendingController extends Controller
         $users = User::all();
 
         return view('admin.item.lending', compact('lendings', 'users'));
+    }
+
+    public function returnItem($id)
+    {
+        $lendingItem = LendingItem::findOrFail($id);
+
+        if ($lendingItem->status === 'Returned') {
+            return back()->with('error', 'Item already returned!');
+        }
+
+        // Update status item
+        $lendingItem->update([
+            'status' => 'Returned'
+        ]);
+
+        // Kurangi jumlah lending di item
+        $lendingItem->item->decrement('lending', $lendingItem->total);
+
+        // Cek apakah semua item sudah returned
+        $lending = $lendingItem->lending;
+
+        $allReturned = $lending->lendingItems->every(fn($li) => $li->status === 'Returned');
+
+        if ($allReturned) {
+            $lending->update([
+                'status' => 'Returned',
+                'return_date' => now(),
+                'edited_by' => auth()->user()->name
+            ]);
+        }
+
+        return back()->with('success', 'Item returned successfully!');
     }
 }

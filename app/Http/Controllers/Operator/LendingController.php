@@ -16,7 +16,7 @@ class LendingController extends Controller
     {
         $lendings = Lending::with(['lendingItems.item', 'user'])->get();
         $items = Item::all();
-        return view('operator.lending.index', compact('lendings', 'items'));
+        return view('operator.lendings.index', compact('lendings', 'items'));
     }
 
     public function store(Request $request)
@@ -85,39 +85,4 @@ class LendingController extends Controller
     // {
     //     return Excel::download(new LendingsExport, 'lendings.xlsx');
     // }
-    public function returnItem($id)
-    {
-        $item = LendingItem::findOrFail($id);
-
-        // kalau sudah returned, skip
-        if ($item->status === 'Returned') {
-            return back()->with('error', 'Item already returned!');
-        }
-
-        // update status item
-        $item->status = 'Returned';
-        $item->save();
-
-        // 🔥 update stok item (optional tapi bagus)
-        $barang = Item::find($item->item_id);
-        if ($barang) {
-            $barang->total += $item->total;
-            $barang->save();
-        }
-
-        // 🔥 cek semua item dalam lending
-        $lending = $item->lending;
-
-        $notReturned = $lending->lendingItems()
-            ->where('status', 'Not Returned')
-            ->count();
-
-        if ($notReturned == 0) {
-            $lending->update([
-                'return_date' => now()->toDateString(),
-            ]);
-        }
-
-        return back()->with('success', 'Item returned successfully');
-    }
 }

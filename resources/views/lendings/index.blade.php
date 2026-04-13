@@ -44,28 +44,29 @@
                     <tr>
                         <td>{{ $lending->id }}</td>
                         <td>
-                           @foreach ($lending->items as $li)
-    {{ $li->item->name }}
+                            @foreach ($lending->lendingItems as $li)
+                                {{ $li->item->name }}
 
-    <span class="badge {{ $li->status == 'Returned' ? 'bg-success' : 'bg-warning' }}">
-        {{ $li->status }}
-    </span>
+                                <span class="badge {{ $li->status == 'Returned' ? 'bg-success' : 'bg-warning' }}">
+                                    {{ $li->status }}
+                                </span>
 
-    @if ($li->status == 'Not Returned' && auth()->user()->role === 'staff')
-        <form action="{{ route('lending-items.return', $li->id) }}" method="POST" style="display:inline;">
-            @csrf
-            <button class="btn btn-sm btn-success"
-                onclick="return confirm('Return this item?')">
-                ✔
-            </button>
-        </form>
-    @endif
+                                @if ($li->status == 'Not Returned' && auth()->user()->role === 'staff')
+                                    <form action="{{ route('lending-items.return', $li->id) }}" method="POST"
+                                        style="display:inline;">
+                                        @csrf
+                                        <button class="btn btn-sm btn-success"
+                                            onclick="return confirm('Return this item?')">
+                                            ✔
+                                        </button>
+                                    </form>
+                                @endif
 
-    <br>
-@endforeach
+                                <br>
+                            @endforeach
                         </td>
                         <td>
-                            @foreach ($lending->items as $li)
+                            @foreach ($lending->lendingItems as $li)
                                 {{ $li->total }}<br>
                             @endforeach
                         </td>
@@ -74,17 +75,26 @@
                         <td>{{ strtolower(\Carbon\Carbon::parse($lending->created_at)->timezone(config('app.timezone'))->locale('id')->translatedFormat('d F Y H:i')) }}
                         </td>
                         <td>
-                            <span class="badge {{ $lending->status == 'Returned' ? 'bg-success' : 'bg-warning' }}">
+                            {{-- <span class="badge {{ $lending->status == 'Returned' ? 'bg-success' : 'bg-warning' }}">
                                 {{ $lending->status }}
+                            </span> --}}
+                            @php
+                                $allReturned = $lending->lendingItems->every(fn($li) => $li->status === 'Returned');
+                            @endphp
+
+                            <span class="badge {{ $allReturned ? 'bg-success' : 'bg-warning' }}">
+                                {{ $allReturned ? 'Returned' : 'Not Returned' }}
                             </span>
                         </td>
                         <td>{{ $lending->edited_by }}</td>
                         @if (auth()->user()->role === 'staff')
                             <td>
                                 @if ($lending->status == 'Not Returned')
-                                    <form action="{{ route('lendings.returned', $lending->id) }}" method="POST" style="display:inline;">
+                                    <form action="{{ route('lendings.returned', $lending->id) }}" method="POST"
+                                        style="display:inline;">
                                         @csrf
-                                        <button class="btn btn-success btn-sm" onclick="return confirm('Mark this item as returned?')">
+                                        <button class="btn btn-success btn-sm"
+                                            onclick="return confirm('Mark this item as returned?')">
                                             Returned
                                         </button>
                                     </form>
